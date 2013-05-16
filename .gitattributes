@@ -1,0 +1,2 @@
+# Prevent .git* files from being exported with 'git archive'
+.git* export-ignore
