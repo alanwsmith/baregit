@@ -1,0 +1,129 @@
+#!/usr/bin/perl -w 
+
+use strict;
+
+
+################################################################################
+### DESCRIPTION
+################################################################################
+# This script is designed to prep a "bare" git repo. It makes a repo with a name 
+# that is provided by the first argument. It clones this to a temporary location
+# so that it can make the first master branch. It does this by makeing a
+# a .gitignore and .gitattributes file set with some basic setup items in them.
+
+
+
+################################################################################
+### MAIN
+################################################################################
+
+
+checkParams();
+checkRepo();
+
+### Create the bare repo
+`git --bare init $ARGV[0]`;
+
+### Make the tmp repo and use it to poulate the --bare one. 
+makeTmpRepo();
+
+print "Created and prepped new repo: '$ARGV[0]'\n";
+
+
+
+################################################################################
+### checkParams()
+################################################################################
+# Used to make sure that a param has been passed.
+################################################################################
+
+sub checkParams {
+	### Make sure that an argument was passed
+	if(!$ARGV[0]) {
+		errorOut("You must pass an argument. For example: 'baregit new-repo'");
+	}
+}
+
+
+################################################################################
+### checkRepo();
+################################################################################
+# Used to make sure that the repo doesn't already exist. 
+################################################################################
+
+sub checkRepo {
+	if(-e $ARGV[0]) {
+		errorOut("$ARGV[0] already exists.");
+	}
+}
+
+
+################################################################################
+### errorOut("MSG");
+################################################################################
+# Used to print an error and then exist the app.
+################################################################################
+
+sub errorOut {
+	printf("%s\n", $_[0]);
+	printf("Process Killed.\n");
+	exit;
+}
+
+
+################################################################################
+### makeTmpRepo
+################################################################################
+# Used to build a temporary repo that will be used to make a master branch
+# in the main repo
+################################################################################
+
+sub makeTmpRepo {
+	my $tmpName = sprintf("tmp-repo-%s-%s-%s", (localtime())[2], (localtime())[1], (localtime())[0]);
+	
+	`git init $tmpName`;
+	chdir($tmpName);
+	# d(`pwd`);
+	
+	### Make the .gitignore file
+	`echo .DS_Store > .gitignore`;
+	`echo *.log >> .gitignore`;
+	
+	### Prevent .git files from being exported with .git archive
+	`echo "# Prevent .git* files from being exported with 'git archive'" > .gitattributes`;	
+	`echo ".git*" export-ignore >> .gitattributes`;
+	
+	### Make an empty readme.md file
+	`touch readme.md`;
+	
+	### Add all the files
+	`git add .`;
+	
+	### Commit
+	`git commit -m"- Initial commit with basic git setup and readme file."`;
+	
+	### push the data back up.
+	`git remote add origin ../$ARGV[0]`;
+	`git push -q origin master`;
+	
+	### Jump up a directory and remove the tmp repo
+	chdir("../");
+	`rm -rf $tmpName`;
+	
+	return $tmpName;
+}
+
+
+################################################################################
+### debug
+################################################################################
+# Prints out a debugging message if debugging is turned on.
+################################################################################
+
+sub d {
+	if($ARGV[1]) {
+		printf("%s\n", $_[0]);
+	}
+}
+
+
