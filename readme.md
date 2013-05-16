@@ -25,4 +25,6 @@ Just do:
 
     baregit repo-name
 
+This will make a new git repository in the current directory. As part of the process, the repo is checked out to a tmp repo where a basic set of files are created, added and committed back. With this setup, the repo can be cloned immediately and the master branch will exist and be ready to go. 
+
 
